@@ -1,0 +1,255 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Contador de gas",
+        "description": "Cuenta los pulsos del contador y les pone precio con la tarifa regulada TUR.",
+        "data": {
+          "name": "Nombre",
+          "pulse_entity": "Sensor de pulsos",
+          "edge": "Contar el pulso al",
+          "m3_per_pulse": "m³ por pulso",
+          "tariff": "Tarifa",
+          "initial_reading": "Lectura actual del contador",
+          "create_dashboard": "Crear el panel de gas"
+        },
+        "data_description": {
+          "pulse_entity": "Sensor binario conectado al reed del contador.",
+          "edge": "La misma transición que usaba tu automatización.",
+          "m3_per_pulse": "Viene en la placa del contador, p. ej. 1 imp = 0,01 m³.",
+          "tariff": "TUR 1 hasta 5.000 kWh/año, TUR 2 hasta 15.000, TUR 3 hasta 50.000.",
+          "initial_reading": "Dígitos negros y decimales rojos ahora mismo, en m³.",
+          "create_dashboard": "Añade un panel en la barra lateral. Necesita Mushroom, ApexCharts card y card-mod de HACS."
+        }
+      },
+      "bill": {
+        "title": "Última factura",
+        "description": "Cópialos de tu última factura de gas para calcular la siguiente.",
+        "data": {
+          "bill_date": "Fecha de la lectura",
+          "bill_reading": "Lectura (m³)",
+          "factor": "Factor de conversión (kWh/m³)",
+          "rental": "Alquiler del contador (€/día)"
+        },
+        "data_description": {
+          "bill_date": "Fecha de la 'Lectura actual' de la factura.",
+          "bill_reading": "'Lectura actual' en m³.",
+          "factor": "'Conversión: 1 m³ = … kWh' de la factura.",
+          "rental": "Línea 'Alquiler de contador'."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Este sensor de pulsos ya está configurado."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opciones del contador de gas",
+        "data": {
+          "pulse_entity": "Sensor de pulsos",
+          "edge": "Contar el pulso al",
+          "m3_per_pulse": "m³ por pulso",
+          "tariff": "Tarifa",
+          "debounce": "Ignorar pulsos a menos de (s)",
+          "auto_prices": "Actualizar los precios TUR automáticamente",
+          "period_days": "Días de un periodo de facturación",
+          "create_dashboard": "Crear el panel de gas"
+        },
+        "data_description": {
+          "pulse_entity": "Sensor binario conectado al reed del contador.",
+          "edge": "La misma transición que usaba tu automatización.",
+          "m3_per_pulse": "Viene en la placa del contador, p. ej. 1 imp = 0,01 m³.",
+          "tariff": "TUR 1 hasta 5.000 kWh/año, TUR 2 hasta 15.000, TUR 3 hasta 50.000.",
+          "debounce": "Filtra los rebotes del reed.",
+          "auto_prices": "Se leen de comercializadoraregulada.es cada 6 horas.",
+          "period_days": "Se usa para la previsión de la factura."
+        }
+      }
+    }
+  },
+  "selector": {
+    "edge": {
+      "options": {
+        "on_off": "Pasar de encendido a apagado",
+        "off_on": "Pasar de apagado a encendido"
+      }
+    },
+    "tariff": {
+      "options": {
+        "tur1": "TUR 1",
+        "tur2": "TUR 2",
+        "tur3": "TUR 3"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "lectura": {
+        "name": "Lectura del contador"
+      },
+      "consumo_hoy": {
+        "name": "Gas hoy"
+      },
+      "consumo_mes": {
+        "name": "Gas este mes"
+      },
+      "consumo_factura": {
+        "name": "Gas desde la última factura"
+      },
+      "caudal": {
+        "name": "Caudal"
+      },
+      "ultimo_pulso": {
+        "name": "Último pulso"
+      },
+      "precio_kwh": {
+        "name": "Precio energía TUR"
+      },
+      "termino_fijo": {
+        "name": "Término fijo TUR"
+      },
+      "precio_m3": {
+        "name": "Precio por m³"
+      },
+      "fijo_dia": {
+        "name": "Coste fijo diario"
+      },
+      "coste_hoy": {
+        "name": "Coste hoy"
+      },
+      "coste_mes": {
+        "name": "Coste este mes"
+      },
+      "factura": {
+        "name": "Factura en curso"
+      },
+      "prevision_factura": {
+        "name": "Previsión de factura"
+      },
+      "estado_precios": {
+        "name": "Estado de los precios",
+        "state": {
+          "ok": "Correcto",
+          "error": "Error",
+          "manual": "Manual",
+          "pendiente": "Pendiente"
+        }
+      }
+    },
+    "number": {
+      "factor_conversion": {
+        "name": "Factor de conversión"
+      },
+      "lectura_factura": {
+        "name": "Lectura de la última factura"
+      },
+      "impuesto_hidrocarburos": {
+        "name": "Impuesto de hidrocarburos"
+      },
+      "alquiler_contador": {
+        "name": "Alquiler del contador"
+      },
+      "iva": {
+        "name": "IVA"
+      },
+      "ajuste_lectura": {
+        "name": "Ajustar lectura del contador"
+      }
+    },
+    "date": {
+      "fecha_factura": {
+        "name": "Fecha de la última factura"
+      }
+    }
+  },
+  "exceptions": {
+    "no_entry": {
+      "message": "No hay ningún contador de gas cargado."
+    },
+    "several_entries": {
+      "message": "Hay varios contadores de gas: elige uno con config_entry_id."
+    }
+  },
+  "services": {
+    "nueva_factura": {
+      "name": "Cerrar factura",
+      "description": "Empieza un periodo nuevo con la lectura de tu última factura.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Contador",
+          "description": "Solo si tienes varios contadores."
+        },
+        "fecha": {
+          "name": "Fecha de la lectura",
+          "description": "Fecha de la 'Lectura actual' de la factura."
+        },
+        "lectura": {
+          "name": "Lectura",
+          "description": "'Lectura actual' en m³."
+        },
+        "factor_conversion": {
+          "name": "Factor de conversión",
+          "description": "kWh por m³ de la factura."
+        }
+      }
+    },
+    "ajustar_lectura": {
+      "name": "Ajustar lectura",
+      "description": "Pone la lectura que marca el contador. No cambia el consumo de hoy ni del mes.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Contador",
+          "description": "Solo si tienes varios contadores."
+        },
+        "lectura": {
+          "name": "Lectura",
+          "description": "Lectura del contador en m³."
+        }
+      }
+    },
+    "establecer_precio": {
+      "name": "Establecer precio",
+      "description": "Añade o corrige un precio TUR desde una fecha (precios sin impuestos).",
+      "fields": {
+        "config_entry_id": {
+          "name": "Contador",
+          "description": "Solo si tienes varios contadores."
+        },
+        "fecha": {
+          "name": "Desde",
+          "description": "Primer día con ese precio."
+        },
+        "termino_fijo": {
+          "name": "Término fijo (€/mes)",
+          "description": "Sin impuestos."
+        },
+        "termino_variable": {
+          "name": "Término variable (€/kWh)",
+          "description": "Sin impuestos."
+        }
+      }
+    },
+    "actualizar_precios": {
+      "name": "Actualizar precios",
+      "description": "Lee ahora los precios TUR.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Contador",
+          "description": "Solo si tienes varios contadores."
+        }
+      }
+    },
+    "crear_panel": {
+      "name": "Crear panel",
+      "description": "Vuelve a crear el panel de gas.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Contador",
+          "description": "Solo si tienes varios contadores."
+        }
+      }
+    }
+  }
+}

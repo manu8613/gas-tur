@@ -1,0 +1,42 @@
+{
+  "entity": {
+    "sensor": {
+      "lectura": {"default": "mdi:meter-gas"},
+      "consumo_hoy": {"default": "mdi:fire"},
+      "consumo_mes": {"default": "mdi:calendar-month"},
+      "consumo_factura": {"default": "mdi:receipt-text-outline"},
+      "caudal": {"default": "mdi:gauge"},
+      "ultimo_pulso": {"default": "mdi:pulse"},
+      "precio_kwh": {"default": "mdi:tag-outline"},
+      "termino_fijo": {"default": "mdi:calendar-clock"},
+      "precio_m3": {"default": "mdi:currency-eur"},
+      "fijo_dia": {"default": "mdi:calendar-today"},
+      "coste_hoy": {"default": "mdi:cash"},
+      "coste_mes": {"default": "mdi:cash-multiple"},
+      "factura": {"default": "mdi:receipt-text"},
+      "prevision_factura": {"default": "mdi:crystal-ball"},
+      "estado_precios": {
+        "default": "mdi:check-circle",
+        "state": {"error": "mdi:alert", "manual": "mdi:hand-back-right", "pendiente": "mdi:timer-sand"}
+      }
+    },
+    "number": {
+      "factor_conversion": {"default": "mdi:swap-horizontal"},
+      "lectura_factura": {"default": "mdi:counter"},
+      "impuesto_hidrocarburos": {"default": "mdi:bank"},
+      "alquiler_contador": {"default": "mdi:meter-gas-outline"},
+      "iva": {"default": "mdi:percent"},
+      "ajuste_lectura": {"default": "mdi:pencil"}
+    },
+    "date": {
+      "fecha_factura": {"default": "mdi:calendar-check"}
+    }
+  },
+  "services": {
+    "nueva_factura": {"service": "mdi:receipt-text-check"},
+    "ajustar_lectura": {"service": "mdi:pencil"},
+    "establecer_precio": {"service": "mdi:tag-plus"},
+    "actualizar_precios": {"service": "mdi:refresh"},
+    "crear_panel": {"service": "mdi:view-dashboard"}
+  }
+}

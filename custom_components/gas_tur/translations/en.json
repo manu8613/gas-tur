@@ -1,0 +1,255 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Gas meter",
+        "description": "Counts the meter pulses and prices them with the regulated TUR tariff.",
+        "data": {
+          "name": "Name",
+          "pulse_entity": "Pulse sensor",
+          "edge": "Count the pulse when",
+          "m3_per_pulse": "m³ per pulse",
+          "tariff": "Tariff",
+          "initial_reading": "Current meter reading",
+          "create_dashboard": "Create the Gas dashboard"
+        },
+        "data_description": {
+          "pulse_entity": "Binary sensor wired to the meter's reed switch.",
+          "edge": "Same transition your old automation used.",
+          "m3_per_pulse": "Printed on the meter, e.g. 1 imp = 0.01 m³.",
+          "tariff": "TUR 1 up to 5,000 kWh/year, TUR 2 up to 15,000, TUR 3 up to 50,000.",
+          "initial_reading": "Black digits and red decimals now, in m³.",
+          "create_dashboard": "Adds a dashboard to the sidebar. Needs Mushroom, ApexCharts card and card-mod from HACS."
+        }
+      },
+      "bill": {
+        "title": "Last bill",
+        "description": "Copy these from your last gas bill so the next one can be estimated.",
+        "data": {
+          "bill_date": "Reading date",
+          "bill_reading": "Reading (m³)",
+          "factor": "Conversion factor (kWh/m³)",
+          "rental": "Meter rental (€/day)"
+        },
+        "data_description": {
+          "bill_date": "'Lectura actual' date on the bill.",
+          "bill_reading": "'Lectura actual' in m³.",
+          "factor": "'Conversión: 1 m³ = … kWh' on the bill.",
+          "rental": "'Alquiler de contador' line."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "This pulse sensor is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Gas meter options",
+        "data": {
+          "pulse_entity": "Pulse sensor",
+          "edge": "Count the pulse when",
+          "m3_per_pulse": "m³ per pulse",
+          "tariff": "Tariff",
+          "debounce": "Ignore pulses closer than (s)",
+          "auto_prices": "Update TUR prices automatically",
+          "period_days": "Days in a billing period",
+          "create_dashboard": "Create the Gas dashboard"
+        },
+        "data_description": {
+          "pulse_entity": "Binary sensor wired to the meter's reed switch.",
+          "edge": "Same transition your old automation used.",
+          "m3_per_pulse": "Printed on the meter, e.g. 1 imp = 0.01 m³.",
+          "tariff": "TUR 1 up to 5,000 kWh/year, TUR 2 up to 15,000, TUR 3 up to 50,000.",
+          "debounce": "Filters reed switch bounce.",
+          "auto_prices": "Read from comercializadoraregulada.es every 6 hours.",
+          "period_days": "Used for the bill forecast."
+        }
+      }
+    }
+  },
+  "selector": {
+    "edge": {
+      "options": {
+        "on_off": "Change from on to off",
+        "off_on": "Change from off to on"
+      }
+    },
+    "tariff": {
+      "options": {
+        "tur1": "TUR 1",
+        "tur2": "TUR 2",
+        "tur3": "TUR 3"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "lectura": {
+        "name": "Meter reading"
+      },
+      "consumo_hoy": {
+        "name": "Gas today"
+      },
+      "consumo_mes": {
+        "name": "Gas this month"
+      },
+      "consumo_factura": {
+        "name": "Gas since last bill"
+      },
+      "caudal": {
+        "name": "Flow"
+      },
+      "ultimo_pulso": {
+        "name": "Last pulse"
+      },
+      "precio_kwh": {
+        "name": "TUR energy price"
+      },
+      "termino_fijo": {
+        "name": "TUR fixed term"
+      },
+      "precio_m3": {
+        "name": "Price per m3"
+      },
+      "fijo_dia": {
+        "name": "Fixed cost per day"
+      },
+      "coste_hoy": {
+        "name": "Cost today"
+      },
+      "coste_mes": {
+        "name": "Cost this month"
+      },
+      "factura": {
+        "name": "Current bill"
+      },
+      "prevision_factura": {
+        "name": "Bill forecast"
+      },
+      "estado_precios": {
+        "name": "Price status",
+        "state": {
+          "ok": "OK",
+          "error": "Error",
+          "manual": "Manual",
+          "pendiente": "Pending"
+        }
+      }
+    },
+    "number": {
+      "factor_conversion": {
+        "name": "Conversion factor"
+      },
+      "lectura_factura": {
+        "name": "Last bill reading"
+      },
+      "impuesto_hidrocarburos": {
+        "name": "Hydrocarbon tax"
+      },
+      "alquiler_contador": {
+        "name": "Meter rental"
+      },
+      "iva": {
+        "name": "VAT"
+      },
+      "ajuste_lectura": {
+        "name": "Adjust meter reading"
+      }
+    },
+    "date": {
+      "fecha_factura": {
+        "name": "Last bill reading date"
+      }
+    }
+  },
+  "exceptions": {
+    "no_entry": {
+      "message": "No gas meter is loaded."
+    },
+    "several_entries": {
+      "message": "There are several gas meters: choose one with config_entry_id."
+    }
+  },
+  "services": {
+    "nueva_factura": {
+      "name": "Close bill",
+      "description": "Start a new billing period from the reading on your latest bill.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Meter",
+          "description": "Only needed with several meters."
+        },
+        "fecha": {
+          "name": "Reading date",
+          "description": "'Lectura actual' date on the bill."
+        },
+        "lectura": {
+          "name": "Reading",
+          "description": "'Lectura actual' in m³."
+        },
+        "factor_conversion": {
+          "name": "Conversion factor",
+          "description": "kWh per m³ on the bill."
+        }
+      }
+    },
+    "ajustar_lectura": {
+      "name": "Adjust reading",
+      "description": "Set the meter reading to what the dial shows. Today's and this month's use are not changed.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Meter",
+          "description": "Only needed with several meters."
+        },
+        "lectura": {
+          "name": "Reading",
+          "description": "Dial reading in m³."
+        }
+      }
+    },
+    "establecer_precio": {
+      "name": "Set price",
+      "description": "Add or correct a TUR price from a date (prices without taxes).",
+      "fields": {
+        "config_entry_id": {
+          "name": "Meter",
+          "description": "Only needed with several meters."
+        },
+        "fecha": {
+          "name": "From",
+          "description": "First day of the price."
+        },
+        "termino_fijo": {
+          "name": "Fixed term (€/month)",
+          "description": "Without taxes."
+        },
+        "termino_variable": {
+          "name": "Energy term (€/kWh)",
+          "description": "Without taxes."
+        }
+      }
+    },
+    "actualizar_precios": {
+      "name": "Update prices",
+      "description": "Read the TUR prices now.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Meter",
+          "description": "Only needed with several meters."
+        }
+      }
+    },
+    "crear_panel": {
+      "name": "Create dashboard",
+      "description": "Rebuild the Gas dashboard.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Meter",
+          "description": "Only needed with several meters."
+        }
+      }
+    }
+  }
+}
