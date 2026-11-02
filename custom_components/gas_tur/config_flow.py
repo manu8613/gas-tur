@@ -52,7 +52,12 @@ from .const import (
 
 
 def _number(minimum: float, maximum: float, step: float, unit: str | None = None) -> NumberSelector:
-    config = NumberSelectorConfig(min=minimum, max=maximum, step=step, mode=NumberSelectorMode.BOX)
+    config = NumberSelectorConfig(
+        min=minimum,
+        max=maximum,
+        step=step if step >= 0.001 else "any",  # selectors refuse steps below 0.001
+        mode=NumberSelectorMode.BOX,
+    )
     if unit:
         config["unit_of_measurement"] = unit
     return NumberSelector(config)

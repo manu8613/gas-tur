@@ -65,7 +65,7 @@ establecer_precio:
         number:
           min: 0
           max: 1
-          step: 0.000001
+          step: any
           mode: box
           unit_of_measurement: "€/kWh"
 actualizar_precios:
