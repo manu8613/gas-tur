@@ -31,13 +31,43 @@ El asistente pide dos cosas:
 | Contador | El sensor binario del reed, cuándo cuenta el pulso (de encendido a apagado normalmente), m³ por pulso (en la placa: `1 imp = 0,01 m³`), la tarifa y la **lectura actual** del contador. |
 | Última factura | Fecha y lectura de la "Lectura actual" de tu última factura, el factor de conversión (`1 m³ = … kWh`) y el alquiler del contador (€/día). |
 
-El panel usa **Mushroom**, **ApexCharts card** y **card-mod** (HACS → Frontend). Sin ellos, las
-tarjetas de esas extensiones salen con error; el resto de la integración funciona igual.
+El panel usa **Mushroom**, **ApexCharts card** y **card-mod**: ver [Requisitos del panel](#requisitos-del-panel).
 
 ### Panel de Energía
 
 En **Ajustes → Paneles → Energía → Consumo de gas** elige **Lectura del contador** y, como
 precio, **Utilizar una entidad con el precio actual → Precio por m³**.
+
+### Conservar el historial de un sensor anterior
+
+Si ya medías el gas con otro sensor de m³ (por ejemplo un `counter` con un sensor de plantilla),
+la lectura de Gas TUR puede seguir escribiendo en su historial y sus estadísticas:
+
+1. Apunta el valor actual del sensor antiguo y haz una copia de seguridad.
+2. Quita el sensor antiguo (de `configuration.yaml` o de Ayudantes) y reinicia. Su historial
+   queda en la base de datos.
+3. Instala Gas TUR con esa lectura como **lectura actual**, nunca menor: si baja, Energía lo
+   toma como un reinicio del contador.
+4. **Ajustes → Entidades → Lectura del contador → ID de entidad**: ponle el del sensor antiguo
+   (por ejemplo `sensor.contador_gas`). El registro avisará de que no puede renombrar las
+   estadísticas porque el ID ya existe: es lo esperado, el sensor pasa a escribir en las antiguas.
+5. En **Herramientas → Estadísticas**, borra las estadísticas sueltas del ID original si aparecen.
+
+Las unidades deben coincidir (m³, clase `gas`, `total_increasing`), como en un sensor de
+plantilla normal.
+
+### Requisitos del panel
+
+Las tarjetas del panel necesitan, desde **HACS → Frontend**:
+
+| Tarjeta | Para qué |
+|---|---|
+| [Mushroom](https://github.com/piitaya/lovelace-mushroom) | Chips de precio y factor. |
+| [ApexCharts card](https://github.com/RomRider/apexcharts-card) | Todas las gráficas. |
+| [card-mod](https://github.com/thomasloven/lovelace-card-mod) | El degradado de la tarjeta del gasto de hoy. |
+
+HACS no permite que una integración instale tarjetas de frontend, así que hay que instalarlas
+aparte. Sin ellas, esas tarjetas salen con error y el resto funciona.
 
 ## Cada vez que llega una factura
 
