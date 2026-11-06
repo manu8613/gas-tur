@@ -443,7 +443,7 @@ async def test_periods_from_statistics(hass: HomeAssistant, prices, freezer) -> 
         await setup(hass, entry)
         await entry.runtime_data.async_sync_periods()
         await hass.async_block_till_done()
-    hass.config.components.discard("recorder")
+    hass.config.components.remove("recorder")
 
     assert state(hass, entry, "consumo_mes").state == "18.37"
     assert state(hass, entry, "consumo_hoy").state == "1.42"
