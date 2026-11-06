@@ -12,6 +12,7 @@ import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import (
     async_track_state_change_event,
@@ -203,6 +204,51 @@ class GasTurManager(DataUpdateCoordinator[None]):
             async_track_time_change(self.hass, self._midnight, hour=0, minute=0, second=1)
         )
         self._rollover()
+
+    async def async_sync_periods(self, _hass: HomeAssistant | None = None) -> None:
+        """Fill today's and this month's use from the recorder statistics.
+
+        After installing (or a migration that imported old statistics) the
+        integration only knows the use since it started; the statistics of the
+        reading sensor know the whole period.
+        """
+        if "recorder" not in self.hass.config.components:
+            return
+        entity_id = er.async_get(self.hass).async_get_entity_id(
+            "sensor", DOMAIN, f"{self.config_entry.entry_id}_lectura"
+        )
+        if entity_id is None:
+            return
+        from homeassistant.components.recorder import get_instance
+        from homeassistant.components.recorder.statistics import statistic_during_period
+
+        self._rollover()
+        now = dt_util.now()
+        day0 = dt_util.start_of_local_day(now)
+        month0 = dt_util.start_of_local_day(now.replace(day=1))
+        changed = False
+        for start, attr in ((month0, "month_start"), (day0, "day_start")):
+            try:
+                result = await get_instance(self.hass).async_add_executor_job(
+                    statistic_during_period, self.hass, start, None, entity_id, {"change"}, None
+                )
+            except Exception as err:  # noqa: BLE001 - statistics are optional
+                _LOGGER.debug("No se pudieron leer las estadísticas de %s: %s", entity_id, err)
+                return
+            change = result.get("change") if result else None
+            if change is None or not 0 <= change < 100_000:
+                continue
+            ours = self.reading - getattr(self, attr)
+            if change > ours + 0.0005:
+                setattr(self, attr, round(self.reading - change, 4))
+                changed = True
+        if changed:
+            _LOGGER.info(
+                "Consumo recuperado de las estadísticas: hoy %.2f m³, mes %.2f m³",
+                self.m3_today, self.m3_month,
+            )
+            self._save()
+            self.async_update_listeners()
 
     # ------------------------------------------------------------------ pulses
     @callback

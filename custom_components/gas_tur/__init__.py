@@ -7,6 +7,7 @@ import logging
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
@@ -35,6 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GasTurConfigEntry) -> bo
     manager.async_start()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_reload))
+    entry.async_on_unload(async_at_started(hass, manager.async_sync_periods))
 
     if entry.options.get(CONF_CREATE_DASHBOARD, entry.data.get(CONF_CREATE_DASHBOARD, True)):
         await async_setup_dashboard(hass, entry)

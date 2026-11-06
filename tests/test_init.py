@@ -420,3 +420,33 @@ async def test_unload_and_remove(hass: HomeAssistant, prices, freezer, hass_stor
     assert await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
     assert f"{DOMAIN}.{entry.entry_id}" not in hass_storage
+
+
+async def test_periods_from_statistics(recorder_mock, hass: HomeAssistant, prices, freezer) -> None:
+    """Today's and this month's use come from the statistics when they know more."""
+    from unittest.mock import patch
+
+    freezer.move_to("2026-11-06 14:30:00+01:00")
+    calls = []
+
+    def fake(hass_, start, end, statistic_id, types, units):
+        calls.append(start)
+        return {"change": 18.37 if start.day == 1 else 1.42}
+
+    with patch(
+        "homeassistant.components.recorder.statistics.statistic_during_period", side_effect=fake
+    ):
+        entry = make_entry(initial_reading=22860.42)
+        await setup(hass, entry)
+        await entry.runtime_data.async_sync_periods()
+        await hass.async_block_till_done()
+
+    assert state(hass, entry, "consumo_mes").state == "18.37"
+    assert state(hass, entry, "consumo_hoy").state == "1.42"
+    assert state(hass, entry, "lectura").state == "22860.42"
+    starts = sorted(calls)
+    assert starts[0].day == 1 and starts[-1].day == 6
+
+    # The pulses keep adding on top.
+    await pulse(hass, freezer)
+    assert state(hass, entry, "consumo_hoy").state == "1.43"

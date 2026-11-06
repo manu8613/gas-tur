@@ -2,7 +2,8 @@
   "domain": "gas_tur",
   "name": "Gas TUR",
   "after_dependencies": [
-    "lovelace"
+    "lovelace",
+    "recorder"
   ],
   "codeowners": [
     "@manu8613"
@@ -13,5 +14,5 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/manu8613/gas-tur/issues",
   "requirements": [],
-  "version": "1.0.0"
+  "version": "1.1.0"
 }
