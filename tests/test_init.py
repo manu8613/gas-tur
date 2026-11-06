@@ -422,7 +422,7 @@ async def test_unload_and_remove(hass: HomeAssistant, prices, freezer, hass_stor
     assert f"{DOMAIN}.{entry.entry_id}" not in hass_storage
 
 
-async def test_periods_from_statistics(recorder_mock, hass: HomeAssistant, prices, freezer) -> None:
+async def test_periods_from_statistics(hass: HomeAssistant, prices, freezer) -> None:
     """Today's and this month's use come from the statistics when they know more."""
     from unittest.mock import patch
 
@@ -433,13 +433,17 @@ async def test_periods_from_statistics(recorder_mock, hass: HomeAssistant, price
         calls.append(start)
         return {"change": 18.37 if start.day == 1 else 1.42}
 
-    with patch(
-        "homeassistant.components.recorder.statistics.statistic_during_period", side_effect=fake
+    recorder = SimpleNamespace(async_add_executor_job=hass.async_add_executor_job)
+    hass.config.components.add("recorder")
+    with (
+        patch("homeassistant.components.recorder.statistics.statistic_during_period", side_effect=fake),
+        patch("homeassistant.components.recorder.get_instance", return_value=recorder),
     ):
         entry = make_entry(initial_reading=22860.42)
         await setup(hass, entry)
         await entry.runtime_data.async_sync_periods()
         await hass.async_block_till_done()
+    hass.config.components.discard("recorder")
 
     assert state(hass, entry, "consumo_mes").state == "18.37"
     assert state(hass, entry, "consumo_hoy").state == "1.42"
