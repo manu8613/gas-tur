@@ -1,0 +1,22 @@
+# Dependabot: mantiene al día las dependencias de test y las acciones de CI.
+# Las actualizaciones de seguridad llegan como PR en cuanto GitHub publica un aviso
+# (requiere "Dependabot security updates" activado en Settings → Code security).
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      time: "06:30"
+      timezone: "Europe/Madrid"
+    labels: ["dependencias", "seguridad"]
+    commit-message:
+      prefix: "deps(pip)"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      timezone: "Europe/Madrid"
+    labels: ["dependencias"]
+    commit-message:
+      prefix: "deps(ci)"
