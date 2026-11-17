@@ -34,7 +34,7 @@ jobs:
             grep -q "^## \[$V\]" CHANGELOG.md || { echo "Falta el apartado [$V] en CHANGELOG.md"; exit 1; }
             echo "new=true" >> "$GITHUB_OUTPUT"
           fi
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         if: steps.v.outputs.new == 'true'
         with:
           python-version: "3.14"
