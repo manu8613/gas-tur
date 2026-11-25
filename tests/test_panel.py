@@ -36,6 +36,16 @@ def _states(bill_attrs):
     states = {
         IDS["coste_hoy"]: ("0.41", {}),
         IDS["consumo_hoy"]: ("0.09", {}),
+        IDS["consumo_ayer"]: (
+            "1.2",
+            {
+                "dias": [
+                    {"fecha": "2026-10-21", "dia_semana": 2, "m3": 0.09, "kwh": 0.9, "coste": 0.41},
+                    {"fecha": "2026-10-20", "dia_semana": 1, "m3": 1.2, "kwh": 12.4, "coste": 1.1},
+                    {"fecha": "2026-10-19", "dia_semana": 0, "m3": 0.0, "kwh": 0.0, "coste": None},
+                ]
+            },
+        ),
         IDS["coste_mes"]: ("12.3", {}),
         IDS["consumo_mes"]: ("14.2", {}),
         IDS["factor_conversion"]: ("10.318", {}),
@@ -144,6 +154,22 @@ class PanelTest(unittest.TestCase):
         out = env.from_string(tpl).render()
         self.assertIn("# 0,41 €", out)
         self.assertIn("media **0,59 €/día**", out)
+
+
+    def test_daily_table(self):
+        env = _env(_states(self.bill.as_attributes()))
+        tpl = next(t for t in _templates(self.config) if "Media diaria" in t)
+        out = env.from_string(tpl).render()
+        self.assertIn("| mié 21/10 (hoy) | 0,09 | 0,9 | 0,41 € |", out)
+        self.assertIn("| mar 20/10 | 1,20 | 12,4 | 1,10 € |", out)
+        self.assertIn("| lun 19/10 | 0,00 | 0,0 | — |", out)
+        self.assertIn("| **Total 3 días** | **1,29** | **13,3** | **1,51 €** |", out)
+
+    def test_daily_table_empty(self):
+        states = _states(self.bill.as_attributes())
+        states[IDS["consumo_ayer"]] = ("unknown", {})
+        tpl = next(t for t in _templates(self.config) if "Media diaria" in t)
+        self.assertIn("Aún no hay estadísticas", _env(states).from_string(tpl).render())
 
 
 if __name__ == "__main__":

@@ -12,6 +12,7 @@ ENTITY_KEYS: dict[str, str] = {
     "lectura": "sensor",
     "consumo_hoy": "sensor",
     "consumo_mes": "sensor",
+    "consumo_ayer": "sensor",
     "consumo_factura": "sensor",
     "caudal": "sensor",
     "ultimo_pulso": "sensor",
@@ -112,6 +113,23 @@ _PRICES = _MACROS + """{%- set p = '@precio_kwh' -%}
 {%- endif %}
 
 <ha-icon icon="mdi:calendar-clock"></ha-icon> Próxima revisión: **{{ fecha(state_attr(p, 'proxima_revision')) }}**
+"""
+
+_DAILY = _MACROS + """{%- set dias = state_attr('@consumo_ayer', 'dias') or [] -%}
+{%- if dias -%}
+{%- set coste = dias | map(attribute='coste') | select('number') | sum -%}
+| Día | m³ | kWh | Coste |
+|:--|--:|--:|--:|
+{%- for d in dias %}
+| {{ ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'][d.dia_semana] }} {{ d.fecha[8:10] ~ '/' ~ d.fecha[5:7] }}{% if loop.first %} (hoy){% endif %} | {{ n(d.m3) }} | {{ n(d.kwh, 1) }} | {{ n(d.coste) ~ ' €' if d.coste is not none else '—' }} |
+{%- endfor %}
+| **Total {{ dias | count }} días** | **{{ n(dias | sum(attribute='m3')) }}** | **{{ n(dias | sum(attribute='kwh'), 1) }}** | **{{ n(coste) }} €** |
+| Media diaria | {{ n(dias | sum(attribute='m3') / dias | count) }} | {{ n(dias | sum(attribute='kwh') / dias | count, 1) }} | {{ n(coste / dias | count) }} € |
+
+<sub>Coste aproximado de cada día: consumo al precio TUR de ese día más el fijo diario. Hoy se actualiza en vivo; los días anteriores salen de las estadísticas.</sub>
+{%- else -%}
+Aún no hay estadísticas del contador para mostrar los días.
+{%- endif %}
 """
 
 _GRADIENT = {
@@ -315,6 +333,7 @@ def build_panel(ids: dict[str, str], title: str) -> dict[str, Any]:
                     _chart_cost_series("day", "1"),
                 ],
             },
+            {"type": "markdown", "title": "Consumo por días", "grid_options": {"columns": "full"}, "content": _DAILY},
             {
                 "type": "custom:apexcharts-card",
                 "grid_options": {"columns": 6},

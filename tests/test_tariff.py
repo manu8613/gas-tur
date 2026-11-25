@@ -128,5 +128,52 @@ class PriceTest(unittest.TestCase):
         self.assertEqual([p.variable for p in hist], [0.041199, 0.05])
 
 
+class DailyRowsTest(unittest.TestCase):
+    HISTORY = [
+        tariff.PricePeriod(date(2026, 7, 1), 8.11, 0.041199),
+        tariff.PricePeriod(date(2026, 10, 1), 8.17, 0.050428),
+    ]
+
+    def _rows(self, history=None, days=30):
+        return tariff.daily_rows(
+            {date(2026, 9, 30): 1.0, date(2026, 10, 1): 2.0, date(2026, 10, 3): 0.5},
+            self.HISTORY if history is None else history,
+            today=date(2026, 10, 4),
+            today_m3=0.25,
+            factor=10.318,
+            ieh=0.00234,
+            rental_day=0.019068,
+            vat=21,
+            days=days,
+        )
+
+    def test_newest_first_and_skips_missing_days(self):
+        rows = self._rows()
+        self.assertEqual([r["fecha"] for r in rows], ["2026-10-04", "2026-10-03", "2026-10-01", "2026-09-30"])
+        self.assertEqual(rows[0]["m3"], 0.25)  # today is live
+        self.assertEqual(rows[0]["dia_semana"], 6)  # Sunday
+        self.assertEqual(rows[2]["kwh"], 20.6)
+
+    def test_each_day_uses_the_price_of_that_day(self):
+        rows = {r["fecha"]: r["coste"] for r in self._rows()}
+        old, new = self.HISTORY
+        expect_old = tariff.money(
+            1.0 * tariff.price_per_m3(old.variable, 0.00234, 10.318, 21)
+            + tariff.fixed_per_day_taxed(old.fixed_month, 0.019068, 21)
+        )
+        expect_new = tariff.money(
+            2.0 * tariff.price_per_m3(new.variable, 0.00234, 10.318, 21)
+            + tariff.fixed_per_day_taxed(new.fixed_month, 0.019068, 21)
+        )
+        self.assertEqual(rows["2026-09-30"], expect_old)
+        self.assertEqual(rows["2026-10-01"], expect_new)
+
+    def test_limit_and_no_prices(self):
+        self.assertEqual(len(self._rows(days=2)), 2)
+        self.assertTrue(all(r["coste"] is None for r in self._rows(history=[])))
+        # price_on() needs a non-empty history, so an empty list must not raise
+        self.assertEqual(len(self._rows(history=[])), 4)
+
+
 if __name__ == "__main__":
     unittest.main()

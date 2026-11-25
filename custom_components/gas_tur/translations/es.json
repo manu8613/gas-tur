@@ -95,6 +95,9 @@
       "consumo_mes": {
         "name": "Gas este mes"
       },
+      "consumo_ayer": {
+        "name": "Gas ayer"
+      },
       "consumo_factura": {
         "name": "Gas desde la última factura"
       },
