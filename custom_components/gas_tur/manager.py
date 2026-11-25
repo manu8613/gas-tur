@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import logging
 from typing import Any
 
@@ -36,6 +36,7 @@ from .const import (
     CONF_PULSE_ENTITY,
     CONF_RENTAL,
     CONF_TARIFF,
+    DAILY_DAYS,
     DEFAULT_DEBOUNCE,
     DEFAULT_FACTOR,
     DEFAULT_IEH,
@@ -64,6 +65,7 @@ from .tariff import (
     PricePeriod,
     add_price,
     compute_bill,
+    daily_rows,
     derive_ieh,
     effective_date,
     fixed_per_day_taxed,
@@ -106,6 +108,7 @@ class GasTurManager(DataUpdateCoordinator[None]):
         self.price_checked: datetime | None = None
         self.price_error: str | None = None
         self.settings: dict[str, Any] = {}
+        self.daily: list[dict[str, Any]] = []
 
     # ------------------------------------------------------------------ options
     def _opt(self, key: str, default: Any) -> Any:
@@ -203,6 +206,10 @@ class GasTurManager(DataUpdateCoordinator[None]):
         entry.async_on_unload(
             async_track_time_change(self.hass, self._midnight, hour=0, minute=0, second=1)
         )
+        # The statistics of the last hour are compiled a few minutes after it ends.
+        entry.async_on_unload(
+            async_track_time_change(self.hass, self.async_refresh_daily, minute=6, second=0)
+        )
         self._rollover()
 
     async def async_sync_periods(self, _hass: HomeAssistant | None = None) -> None:
@@ -249,6 +256,54 @@ class GasTurManager(DataUpdateCoordinator[None]):
             )
             self._save()
             self.async_update_listeners()
+
+    async def async_refresh_daily(self, _when: Any = None) -> None:
+        """Rebuild the per-day table (last 30 days) from the recorder statistics."""
+        if "recorder" not in self.hass.config.components:
+            return
+        entity_id = er.async_get(self.hass).async_get_entity_id(
+            "sensor", DOMAIN, f"{self.config_entry.entry_id}_lectura"
+        )
+        if entity_id is None:
+            return
+        from homeassistant.components.recorder import get_instance
+        from homeassistant.components.recorder.statistics import statistics_during_period
+
+        today = dt_util.now().date()
+        start = dt_util.start_of_local_day(dt_util.now()) - timedelta(days=DAILY_DAYS - 1)
+        try:
+            result = await get_instance(self.hass).async_add_executor_job(
+                statistics_during_period,
+                self.hass, start, None, {entity_id}, "day", None, {"change"},
+            )
+        except Exception as err:  # noqa: BLE001 - statistics are optional
+            _LOGGER.debug("No se pudo leer el consumo diario de %s: %s", entity_id, err)
+            return
+        changes: dict[date, float] = {}
+        for row in result.get(entity_id, []):
+            change, begin = row.get("change"), row.get("start")
+            if change is None or begin is None or not 0 <= change < 100_000:
+                continue
+            if isinstance(begin, (int, float)):
+                begin = dt_util.utc_from_timestamp(begin)
+            changes[dt_util.as_local(begin).date()] = change
+        self.daily = daily_rows(
+            changes,
+            self.prices,
+            today=today,
+            today_m3=self.m3_today,
+            factor=self.factor,
+            ieh=self.ieh,
+            rental_day=self.rental,
+            vat=self.vat,
+            days=DAILY_DAYS,
+        )
+        self.async_update_listeners()
+
+    @property
+    def m3_yesterday(self) -> float | None:
+        day = (dt_util.now().date() - timedelta(days=1)).isoformat()
+        return next((r["m3"] for r in self.daily if r["fecha"] == day), None)
 
     # ------------------------------------------------------------------ pulses
     @callback

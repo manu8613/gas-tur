@@ -4,6 +4,7 @@
       "lectura": {"default": "mdi:meter-gas"},
       "consumo_hoy": {"default": "mdi:fire"},
       "consumo_mes": {"default": "mdi:calendar-month"},
+      "consumo_ayer": {"default": "mdi:calendar-today"},
       "consumo_factura": {"default": "mdi:receipt-text-outline"},
       "caudal": {"default": "mdi:gauge"},
       "ultimo_pulso": {"default": "mdi:pulse"},

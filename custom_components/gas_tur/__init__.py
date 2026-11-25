@@ -37,6 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GasTurConfigEntry) -> bo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_reload))
     entry.async_on_unload(async_at_started(hass, manager.async_sync_periods))
+    entry.async_on_unload(async_at_started(hass, manager.async_refresh_daily))
 
     if entry.options.get(CONF_CREATE_DASHBOARD, entry.data.get(CONF_CREATE_DASHBOARD, True)):
         await async_setup_dashboard(hass, entry)

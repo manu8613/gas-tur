@@ -46,6 +46,7 @@ FLOW_TIMEOUT: Final = timedelta(minutes=15)
 MAX_FLOW: Final = 40.0  # m³/h, above any domestic meter (G4 = 6 m³/h)
 
 STORAGE_VERSION: Final = 1
+DAILY_DAYS: Final = 30  # days in the per-day table
 
 DASHBOARD_URL: Final = "gas-tur"
 

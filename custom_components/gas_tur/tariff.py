@@ -272,3 +272,47 @@ def price_per_m3(variable: float, ieh: float, factor: float, vat: float) -> floa
 def fixed_per_day_taxed(fixed_month: float, rental_day: float, vat: float) -> float:
     """Fixed cost of one day (fixed term + meter rental) with VAT."""
     return round((daily_fixed(fixed_month) + rental_day) * (1 + vat / 100), 6)
+
+
+def daily_rows(
+    changes: dict[date, float],
+    history: list[PricePeriod],
+    *,
+    today: date,
+    today_m3: float,
+    factor: float,
+    ieh: float,
+    rental_day: float,
+    vat: float,
+    days: int = 30,
+) -> list[dict[str, Any]]:
+    """Use and approximate cost per day, newest first.
+
+    ``changes`` is the use per day known from the statistics; today's value is
+    always taken live. Each day is priced with the TUR price in force that day.
+    """
+    values = dict(changes)
+    values[today] = today_m3
+    rows: list[dict[str, Any]] = []
+    for offset in range(days):
+        day = today - timedelta(days=offset)
+        if day not in values:
+            continue
+        m3 = round(values[day], 3)
+        cost = None
+        if history:
+            price = price_on(history, day)
+            cost = money(
+                m3 * price_per_m3(price.variable, ieh, factor, vat)
+                + fixed_per_day_taxed(price.fixed_month, rental_day, vat)
+            )
+        rows.append(
+            {
+                "fecha": day.isoformat(),
+                "dia_semana": day.weekday(),
+                "m3": m3,
+                "kwh": round(m3 * factor, 1),
+                "coste": cost,
+            }
+        )
+    return rows

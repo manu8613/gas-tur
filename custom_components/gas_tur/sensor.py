@@ -99,6 +99,14 @@ SENSORS: tuple[GasTurSensorDescription, ...] = (
         value_fn=lambda m: m.m3_month,
     ),
     GasTurSensorDescription(
+        key="consumo_ayer",
+        device_class=SensorDeviceClass.GAS,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        suggested_display_precision=2,
+        value_fn=lambda m: m.m3_yesterday,
+        attr_fn=lambda m: {"dias": m.daily},
+    ),
+    GasTurSensorDescription(
         key="consumo_factura",
         device_class=SensorDeviceClass.GAS,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
@@ -201,7 +209,7 @@ class GasTurSensor(GasTurEntity, SensorEntity):
     """A Gas TUR sensor."""
 
     entity_description: GasTurSensorDescription
-    _unrecorded_attributes = frozenset({"historial", "proxima_revision", "lineas"})
+    _unrecorded_attributes = frozenset({"historial", "proxima_revision", "lineas", "dias"})
 
     def __init__(self, manager: GasTurManager, description: GasTurSensorDescription) -> None:
         super().__init__(manager, description.key)
